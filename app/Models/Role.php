@@ -14,4 +14,9 @@ class Role extends Model
         'nombre',
         'descripcion',
     ];
+
+    public function asignaciones()
+    {
+        return $this->hasMany(AsignacionUsuario::class, 'id_rol');
+    }
 }

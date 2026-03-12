@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import Heading from '@/components/heading';
@@ -44,6 +44,7 @@ type ItemData = {
     estado: EstadoItem | null;
 };
 type Indicador = { id: number; codigo: string; nombre: string };
+type IndicadorResultado = { id: number; id_indicador: number; valor_real: number | string | null };
 
 type Props = {
     programaSedes: ProgramaSedeOption[];
@@ -51,6 +52,7 @@ type Props = {
     isAdmin: boolean;
     indicadores: Indicador[];
     items: ItemData[];
+    resultados: IndicadorResultado[];
     tipoItems: TipoItem[];
     estadoItems: EstadoItem[];
 };
@@ -73,6 +75,7 @@ export default function ItemsIndicadores({
     isAdmin,
     indicadores,
     items,
+    resultados,
     tipoItems,
     estadoItems,
 }: Props) {
@@ -238,29 +241,45 @@ export default function ItemsIndicadores({
                                         )}
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
-                                        <div className="border-t px-4 py-3 space-y-2">
-                                            <div className="flex justify-end">
-                                                <Button variant="outline" size="sm" onClick={() => openCreate(ind.id)}>
-                                                    <Plus className="mr-1 h-3 w-3" />
-                                                    Agregar Item
-                                                </Button>
+                                        <div className="border-t px-4 py-3 space-y-4">
+                                            {/* Sección de Resultado Centralizado */}
+                                            <div className="bg-indigo-50/50 rounded-lg p-4 border border-indigo-100 mb-2">
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-2">
+                                                    <BarChart3 className="h-3 w-3" />
+                                                    Resultado Final del Indicador
+                                                </h4>
+                                                <IndicadorResultForm
+                                                    indicadorId={ind.id}
+                                                    programaId={selectedProgramaSede ?? ''}
+                                                    initialValue={resultados.find(r => r.id_indicador === ind.id)?.valor_real ?? ''}
+                                                />
                                             </div>
-                                            {indItems.length > 0 ? (
-                                                <div className="space-y-1">
-                                                    {indItems.map((item) => (
-                                                        <ItemRow
-                                                            key={item.id}
-                                                            item={item}
-                                                            estadoItems={estadoItems}
-                                                            onEdit={() => openEdit(item)}
-                                                            onDelete={() => destroy(item.id)}
-                                                            onChangeEstado={(val) => changeEstado(item, val)}
-                                                        />
-                                                    ))}
+
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Items de Verificación</h4>
+                                                    <Button variant="outline" size="sm" onClick={() => openCreate(ind.id)} className="h-8">
+                                                        <Plus className="mr-1 h-3 w-3" />
+                                                        Agregar Item
+                                                    </Button>
                                                 </div>
-                                            ) : (
-                                                <p className="text-xs text-muted-foreground">Sin items definidos.</p>
-                                            )}
+                                                {indItems.length > 0 ? (
+                                                    <div className="space-y-1">
+                                                        {indItems.map((item) => (
+                                                            <ItemRow
+                                                                key={item.id}
+                                                                item={item}
+                                                                estadoItems={estadoItems}
+                                                                onEdit={() => openEdit(item)}
+                                                                onDelete={() => destroy(item.id)}
+                                                                onChangeEstado={(val) => changeEstado(item, val)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-muted-foreground">Sin items definidos.</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </CollapsibleContent>
                                 </Collapsible>
@@ -379,5 +398,59 @@ function ItemRow({
                 <Trash2 className="h-3 w-3 text-destructive" />
             </Button>
         </div>
+    );
+}
+
+function IndicadorResultForm({
+    indicadorId,
+    programaId,
+    initialValue
+}: {
+    indicadorId: number;
+    programaId: string;
+    initialValue: string | number
+}) {
+    const { data, setData, post, processing, recentlySuccessful } = useForm({
+        id_indicador: indicadorId,
+        id_programa_sede: programaId,
+        valor_real: initialValue ?? '',
+    });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        post('/indicador-resultados', {
+            preserveScroll: true,
+            onSuccess: () => { },
+        });
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-end gap-3">
+            <div className="flex-1 space-y-1">
+                <Label htmlFor={`result-${indicadorId}`} className="text-[10px] text-slate-500 font-bold uppercase">Porcentaje de Cumplimiento Alcanzado (%)</Label>
+                <div className="relative">
+                    <Input
+                        id={`result-${indicadorId}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        placeholder="Ej: 95.00"
+                        className="h-9 bg-white pr-8"
+                        value={data.valor_real}
+                        onChange={(e) => setData('valor_real', e.target.value)}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">%</div>
+                </div>
+            </div>
+            <Button
+                type="submit"
+                size="sm"
+                className="h-9 px-4 shrink-0 bg-indigo-600 hover:bg-indigo-700"
+                disabled={processing || data.valor_real === initialValue}
+            >
+                {processing ? 'Guardando...' : recentlySuccessful ? 'Guardado' : 'Guardar Resultado'}
+            </Button>
+        </form>
     );
 }

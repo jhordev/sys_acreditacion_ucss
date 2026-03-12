@@ -8,7 +8,7 @@ Route::inertia('/', 'welcome', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware(['role:admin'])->group(function () {
         // Gestión académica
@@ -66,6 +66,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('items-indicadores', [\App\Http\Controllers\EvidenciaItemController::class, 'store'])->name('items-indicadores.store');
         Route::put('items-indicadores/{evidenciaItem}', [\App\Http\Controllers\EvidenciaItemController::class, 'update'])->name('items-indicadores.update');
         Route::delete('items-indicadores/{evidenciaItem}', [\App\Http\Controllers\EvidenciaItemController::class, 'destroy'])->name('items-indicadores.destroy');
+        
+        Route::post('indicador-resultados', [\App\Http\Controllers\IndicadorResultadoController::class, 'store'])->name('indicador-resultados.store');
+    });
+
+    Route::middleware(['role:decanato'])->group(function () {
+        Route::get('decanato', [\App\Http\Controllers\DecanatoController::class, 'index'])->name('decanato.index');
+        Route::get('/decanato/seguimiento', [\App\Http\Controllers\DecanatoController::class, 'seguimiento'])->name('decanato.seguimiento');
+        Route::get('/decanato/indicadores', [\App\Http\Controllers\DecanatoController::class, 'indicadores'])->name('decanato.indicadores');
     });
 });
 

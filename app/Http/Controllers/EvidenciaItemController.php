@@ -86,6 +86,7 @@ class EvidenciaItemController extends Controller
         $ctx = $this->resolveContext($request);
         $indicadores = [];
         $items = [];
+        $resultados = [];
 
         if ($ctx['selectedId']) {
             $indicadores = Indicador::orderBy('codigo')->get();
@@ -93,6 +94,8 @@ class EvidenciaItemController extends Controller
                 ->where('id_programa_sede', $ctx['selectedId'])
                 ->whereNotNull('id_indicador')
                 ->get();
+            
+            $resultados = \App\Models\IndicadorResultado::where('id_programa_sede', $ctx['selectedId'])->get();
         }
 
         return Inertia::render('coordinador/items-indicadores', [
@@ -101,6 +104,7 @@ class EvidenciaItemController extends Controller
             'isAdmin' => $ctx['isAdmin'],
             'indicadores' => $indicadores,
             'items' => $items,
+            'resultados' => $resultados,
             'tipoItems' => TipoItem::all(),
             'estadoItems' => EstadoItem::all(),
         ]);

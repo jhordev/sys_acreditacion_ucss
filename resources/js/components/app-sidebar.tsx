@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Award, Building2, ChevronRight, CircleDot, ClipboardList, FileCheck, GraduationCap, LayoutGrid, Link2, ListChecks, MapPin, Settings, Tags, Target, Users } from 'lucide-react';
+import { Award, BarChart3, Building2, ChevronRight, CircleDot, ClipboardList, FileCheck, GraduationCap, LayoutGrid, Link2, ListChecks, MapPin, Settings, Tags, Target, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -68,13 +68,26 @@ export function AppSidebar() {
     const roles = auth.roles ?? [];
     const isAdmin = roles.includes('admin');
     const isCoordinador = roles.includes('coordinador');
+    const isDecanato = roles.includes('decanato');
 
-    const visibleMainNavItems: NavItem[] = isAdmin
-        ? [
+    const visibleMainNavItems: NavItem[] = [];
+
+    if (isAdmin) {
+        visibleMainNavItems.push(
             { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-            { title: 'Usuarios', href: '/usuarios', icon: Users },
-        ]
-        : [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }];
+            { title: 'Usuarios', href: '/usuarios', icon: Users }
+        );
+    } else {
+        visibleMainNavItems.push({ title: 'Dashboard', href: dashboard(), icon: LayoutGrid });
+    }
+
+    if (isDecanato) {
+        visibleMainNavItems.push(
+            { title: 'Dashboard Decanato', href: '/decanato', icon: BarChart3 },
+            { title: 'Seguimiento Detallado', href: '/decanato/seguimiento', icon: ListChecks },
+            { title: 'Resumen de Indicadores', href: '/decanato/indicadores', icon: Target }
+        );
+    }
 
     const academicoActive = academicoItems.some((item) => isCurrentUrl(item.href));
     const acreditacionActive = acreditacionItems.some((item) => isCurrentUrl(item.href));

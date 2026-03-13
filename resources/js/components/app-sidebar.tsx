@@ -64,7 +64,7 @@ const configuracionItems = [
 
 export function AppSidebar() {
     const { isCurrentUrl } = useCurrentUrl();
-    const { auth } = usePage().props;
+    const { auth, config } = usePage().props as any;
     const roles = auth.roles ?? [];
     const isAdmin = roles.includes('admin');
     const isCoordinador = roles.includes('coordinador');
@@ -82,11 +82,15 @@ export function AppSidebar() {
     }
 
     if (isDecanato) {
-        visibleMainNavItems.push(
-            { title: 'Dashboard Decanato', href: '/decanato', icon: BarChart3 },
-            { title: 'Seguimiento Detallado', href: '/decanato/seguimiento', icon: ListChecks },
-            { title: 'Resumen de Indicadores', href: '/decanato/indicadores', icon: Target }
-        );
+        if (config?.sidebar_decanato_dashboard) {
+            visibleMainNavItems.push({ title: 'Dashboard Decanato', href: '/decanato', icon: BarChart3 });
+        }
+        if (config?.sidebar_decanato_seguimiento) {
+            visibleMainNavItems.push({ title: 'Seguimiento Detallado', href: '/decanato/seguimiento', icon: ListChecks });
+        }
+        if (config?.sidebar_decanato_indicadores) {
+            visibleMainNavItems.push({ title: 'Resumen de Indicadores', href: '/decanato/indicadores', icon: Target });
+        }
     }
 
     const academicoActive = academicoItems.some((item) => isCurrentUrl(item.href));
@@ -232,6 +236,15 @@ export function AppSidebar() {
                                 </CollapsibleContent>
                             </SidebarMenuItem>
                         </Collapsible>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isCurrentUrl('/configuracion')}>
+                                <Link href="/configuracion">
+                                    <Settings />
+                                    <span>Ajustes del Sistema</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>}
             </SidebarContent>

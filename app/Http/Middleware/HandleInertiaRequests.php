@@ -43,6 +43,11 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->asignaciones->pluck('rol.nombre')->unique()->values()->all() ?? [],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'config' => [
+                'sidebar_decanato_dashboard' => (bool) \App\Models\Configuracion::where('clave', 'sidebar_decanato_dashboard')->first()?->valor,
+                'sidebar_decanato_seguimiento' => (bool) \App\Models\Configuracion::where('clave', 'sidebar_decanato_seguimiento')->first()?->valor,
+                'sidebar_decanato_indicadores' => (bool) \App\Models\Configuracion::where('clave', 'sidebar_decanato_indicadores')->first()?->valor,
+            ],
         ];
     }
 }

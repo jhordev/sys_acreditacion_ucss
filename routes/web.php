@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::redirect('/', '/login');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
@@ -77,6 +75,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('decanato', [\App\Http\Controllers\DecanatoController::class, 'index'])->name('decanato.index');
         Route::get('/decanato/seguimiento', [\App\Http\Controllers\DecanatoController::class, 'seguimiento'])->name('decanato.seguimiento');
         Route::get('/decanato/indicadores', [\App\Http\Controllers\DecanatoController::class, 'indicadores'])->name('decanato.indicadores');
+    });
+
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('configuracion', [\App\Http\Controllers\ConfiguracionController::class, 'index'])->name('configuracion.index');
+        Route::put('configuracion', [\App\Http\Controllers\ConfiguracionController::class, 'update'])->name('configuracion.update');
     });
 });
 

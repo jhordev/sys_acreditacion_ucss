@@ -42,6 +42,15 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             href: editAppearance(),
             icon: null,
         },
+        ...(isAdmin
+            ? [
+                {
+                    title: 'Administración',
+                    href: '/configuracion',
+                    icon: null,
+                },
+            ]
+            : []),
     ];
 
     // When server-side rendering, we only render the layout on the client...

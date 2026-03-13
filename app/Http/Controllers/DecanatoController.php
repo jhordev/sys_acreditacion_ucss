@@ -71,10 +71,18 @@ class DecanatoController extends Controller
                     $itemResultado = $queryResultado->first();
                     
                     $valorAlcanzado = $itemResultado ? $itemResultado->valor_real : null;
+                    $finalizadoManual = $itemResultado ? (bool) $itemResultado->finalizado : false;
                     
                     $cumple = null;
-                    if ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
-                        $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+                    if ($finalizadoManual) {
+                        $cumple = true;
+                        $avance = 100;
+                    } elseif ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
+                        if (in_array($indicador->codigo, ['ID25', 'ID26'])) {
+                            $cumple = $valorAlcanzado <= $indicador->valor_referencial;
+                        } else {
+                            $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+                        }
                     }
 
                     return [
@@ -101,11 +109,20 @@ class DecanatoController extends Controller
                 });
 
                 // Avance de Evidencias
-                $evidenciasData = $criterio->evidencias->map(function ($evidencia) use ($items) {
+                $evidenciasData = $criterio->evidencias->map(function ($evidencia) use ($items, $id_programa_sede_filtro) {
                     $itemsEvidencia = $items->where('id_evidencia', $evidencia->id);
                     $total = $itemsEvidencia->count();
                     $completados = $itemsEvidencia->filter(fn($i) => strtolower($i->estado->nombre ?? '') === 'completo')->count();
                     $avance = $total > 0 ? ($completados / $total) * 100 : 0;
+
+                    $queryEvResultado = \DB::table('evidencia_resultados')->where('id_evidencia', $evidencia->id);
+                    if ($id_programa_sede_filtro) {
+                        $queryEvResultado->where('id_programa_sede', $id_programa_sede_filtro);
+                    }
+                    $evResultado = $queryEvResultado->first();
+                    if ($evResultado && $evResultado->finalizado) {
+                        $avance = 100;
+                    }
 
                     return [
                         'id' => $evidencia->id,
@@ -201,10 +218,18 @@ class DecanatoController extends Controller
                     if ($id_programa_sede_filtro) { $queryResultado->where('id_programa_sede', $id_programa_sede_filtro); }
                     $itemResultado = $queryResultado->first();
                     $valorAlcanzado = $itemResultado ? $itemResultado->valor_real : null;
-                    
+                    $finalizadoManual = $itemResultado ? (bool) $itemResultado->finalizado : false;
+
                     $cumple = null;
-                    if ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
-                        $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+                    if ($finalizadoManual) {
+                        $cumple = true;
+                        $avance = 100;
+                    } elseif ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
+                        if (in_array($indicador->codigo, ['ID25', 'ID26'])) {
+                            $cumple = $valorAlcanzado <= $indicador->valor_referencial;
+                        } else {
+                            $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+                        }
                     }
 
                     return [
@@ -217,11 +242,16 @@ class DecanatoController extends Controller
                     ];
                 });
 
-                $evidenciasData = $criterio->evidencias->map(function ($evidencia) use ($items) {
+                $evidenciasData = $criterio->evidencias->map(function ($evidencia) use ($items, $id_programa_sede_filtro) {
                     $itemsEvidencia = $items->where('id_evidencia', $evidencia->id);
                     $total = $itemsEvidencia->count();
                     $completados = $itemsEvidencia->filter(fn($i) => strtolower($i->estado->nombre ?? '') === 'completo')->count();
                     $avance = $total > 0 ? ($completados / $total) * 100 : 0;
+
+                    $queryEvResultado = \DB::table('evidencia_resultados')->where('id_evidencia', $evidencia->id);
+                    if ($id_programa_sede_filtro) { $queryEvResultado->where('id_programa_sede', $id_programa_sede_filtro); }
+                    $evResultado = $queryEvResultado->first();
+                    if ($evResultado && $evResultado->finalizado) { $avance = 100; }
 
                     return [
                         'id' => $evidencia->id, 'codigo' => $evidencia->codigo, 'nombre' => $evidencia->descripcion, 'avance' => round($avance, 2),
@@ -303,10 +333,18 @@ class DecanatoController extends Controller
             if ($id_programa_sede_filtro) { $queryResultado->where('id_programa_sede', $id_programa_sede_filtro); }
             $itemResultado = $queryResultado->first();
             $valorAlcanzado = $itemResultado ? $itemResultado->valor_real : null;
-            
+            $finalizadoManual = $itemResultado ? (bool) $itemResultado->finalizado : false;
+
             $cumple = null;
-            if ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
-                $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+            if ($finalizadoManual) {
+                $cumple = true;
+                $avance = 100;
+            } elseif ($valorAlcanzado !== null && $indicador->valor_referencial !== null) {
+                if (in_array($indicador->codigo, ['ID25', 'ID26'])) {
+                    $cumple = $valorAlcanzado <= $indicador->valor_referencial;
+                } else {
+                    $cumple = $valorAlcanzado >= $indicador->valor_referencial;
+                }
             }
 
             $indicadoresData[] = [

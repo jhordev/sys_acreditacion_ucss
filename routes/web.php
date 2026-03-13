@@ -68,6 +68,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('items-indicadores/{evidenciaItem}', [\App\Http\Controllers\EvidenciaItemController::class, 'destroy'])->name('items-indicadores.destroy');
         
         Route::post('indicador-resultados', [\App\Http\Controllers\IndicadorResultadoController::class, 'store'])->name('indicador-resultados.store');
+        
+        Route::post('items-evidencias/toggle-finalizado', [\App\Http\Controllers\EvidenciaItemController::class, 'toggleEvidenciaFinalizado'])->name('items-evidencias.toggle-finalizado');
+        Route::post('items-indicadores/toggle-finalizado', [\App\Http\Controllers\EvidenciaItemController::class, 'toggleIndicadorFinalizado'])->name('items-indicadores.toggle-finalizado');
     });
 
     Route::middleware(['role:decanato'])->group(function () {

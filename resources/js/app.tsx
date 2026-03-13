@@ -4,6 +4,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { queryParams } from '@/wayfinder';
+
+if (typeof window !== 'undefined') {
+    (window as any).queryParams = queryParams;
+}
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

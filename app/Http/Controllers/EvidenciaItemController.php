@@ -68,6 +68,8 @@ class EvidenciaItemController extends Controller
                 ->where('id_programa_sede', $ctx['selectedId'])
                 ->whereNotNull('id_evidencia')
                 ->get();
+            
+            $completados = \App\Models\EvidenciaResultado::where('id_programa_sede', $ctx['selectedId'])->get();
         }
 
         return Inertia::render('coordinador/items-evidencias', [
@@ -76,6 +78,7 @@ class EvidenciaItemController extends Controller
             'isAdmin' => $ctx['isAdmin'],
             'evidencias' => $evidencias,
             'items' => $items,
+            'evidenciaResultados' => $completados,
             'tipoItems' => TipoItem::all(),
             'estadoItems' => EstadoItem::all(),
         ]);
@@ -155,6 +158,38 @@ class EvidenciaItemController extends Controller
     public function destroy(EvidenciaItem $evidenciaItem): RedirectResponse
     {
         $evidenciaItem->delete();
+
+        return back();
+    }
+
+    public function toggleEvidenciaFinalizado(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'id_evidencia' => 'required|exists:evidencias,id',
+            'id_programa_sede' => 'required|exists:programa_sede,id',
+            'finalizado' => 'required|boolean',
+        ]);
+
+        \App\Models\EvidenciaResultado::updateOrCreate(
+            ['id_evidencia' => $request->id_evidencia, 'id_programa_sede' => $request->id_programa_sede],
+            ['finalizado' => $request->finalizado, 'id_user' => $request->user()->id]
+        );
+
+        return back();
+    }
+
+    public function toggleIndicadorFinalizado(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'id_indicador' => 'required|exists:indicadores,id',
+            'id_programa_sede' => 'required|exists:programa_sede,id',
+            'finalizado' => 'required|boolean',
+        ]);
+
+        \App\Models\IndicadorResultado::updateOrCreate(
+            ['id_indicador' => $request->id_indicador, 'id_programa_sede' => $request->id_programa_sede],
+            ['finalizado' => $request->finalizado, 'id_user' => $request->user()->id]
+        );
 
         return back();
     }

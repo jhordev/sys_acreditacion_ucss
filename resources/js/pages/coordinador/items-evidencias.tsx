@@ -6,6 +6,7 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
     Dialog,
@@ -50,6 +51,7 @@ type Props = {
     selectedProgramaSede: string | null;
     isAdmin: boolean;
     evidencias: Evidencia[];
+    evidenciaResultados: { id_evidencia: number, finalizado: boolean }[];
     items: ItemData[];
     tipoItems: TipoItem[];
     estadoItems: EstadoItem[];
@@ -72,6 +74,7 @@ export default function ItemsEvidencias({
     selectedProgramaSede,
     isAdmin,
     evidencias,
+    evidenciaResultados,
     items,
     tipoItems,
     estadoItems,
@@ -166,6 +169,14 @@ export default function ItemsEvidencias({
         }
     }
 
+    function toggleEvidenciaFinalizado(evId: number, currentVal: boolean) {
+        router.post('/items-evidencias/toggle-finalizado', {
+            id_evidencia: evId,
+            id_programa_sede: selectedProgramaSede,
+            finalizado: !currentVal
+        }, { preserveScroll: true });
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Items Evidencias" />
@@ -227,16 +238,30 @@ export default function ItemsEvidencias({
                             const evItems = itemsByEvidencia[ev.id] ?? [];
                             return (
                                 <Collapsible key={ev.id} defaultOpen={evItems.length > 0} className="rounded-lg border">
-                                    <CollapsibleTrigger className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50 group">
-                                        <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
-                                        <Badge variant="outline" className="text-xs font-mono shrink-0">{ev.codigo}</Badge>
-                                        <span className="text-sm flex-1 truncate">{ev.descripcion}</span>
-                                        {evItems.length > 0 && (
-                                            <Badge variant="secondary" className="text-xs shrink-0">
-                                                {evItems.filter((i) => i.estado?.nombre?.toLowerCase() === 'completo').length}/{evItems.length}
-                                            </Badge>
-                                        )}
-                                    </CollapsibleTrigger>
+                                    <div className="flex w-full items-center gap-2 group pr-4">
+                                        <CollapsibleTrigger className="flex flex-1 items-center gap-2 px-4 py-3 text-left hover:bg-muted/50 overflow-hidden">
+                                            <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
+                                            <Badge variant="outline" className="text-xs font-mono shrink-0">{ev.codigo}</Badge>
+                                            <span className="text-sm flex-1 truncate">{ev.descripcion}</span>
+                                            {evItems.length > 0 && (
+                                                <Badge variant="secondary" className="text-xs shrink-0">
+                                                    {evItems.filter((i) => i.estado?.nombre?.toLowerCase() === 'completo').length}/{evItems.length}
+                                                </Badge>
+                                            )}
+                                        </CollapsibleTrigger>
+
+                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Marcar hecho</span>
+                                            <Checkbox
+                                                checked={evidenciaResultados.find(r => r.id_evidencia === ev.id)?.finalizado ?? false}
+                                                onCheckedChange={() => toggleEvidenciaFinalizado(ev.id, evidenciaResultados.find(r => r.id_evidencia === ev.id)?.finalizado ?? false)}
+                                                className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                                            />
+                                            {(evidenciaResultados.find(r => r.id_evidencia === ev.id)?.finalizado) && (
+                                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-[9px] font-black px-1.5 h-4">HECHO</Badge>
+                                            )}
+                                        </div>
+                                    </div>
                                     <CollapsibleContent>
                                         <div className="border-t px-4 py-3 space-y-2">
                                             <div className="flex justify-end">

@@ -175,7 +175,10 @@ export default function IndicadoresSummary({ facultad, programaSedes, selectedPr
                                             {/* Meta */}
                                             <div className="flex flex-col gap-1 text-center md:text-left">
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Meta Referencial</span>
-                                                <span className="text-lg font-black text-slate-700">{indicador.valor_ref ?? '—'}</span>
+                                                <span className="text-lg font-black text-slate-700">
+                                                    {indicador.valor_ref ?? '—'}
+                                                    {['ID25', 'ID26'].includes(indicador.codigo) && indicador.valor_ref !== null ? ' años' : ''}
+                                                </span>
                                             </div>
 
                                             {/* Real */}
@@ -186,6 +189,7 @@ export default function IndicadoresSummary({ facultad, programaSedes, selectedPr
                                                     {indicador.cumple === false && <XCircle className="h-4 w-4 text-rose-500" />}
                                                     <span className={`text-lg font-black ${indicador.cumple === true ? 'text-emerald-600' : (indicador.cumple === false ? 'text-rose-600' : 'text-slate-600')}`}>
                                                         {indicador.valor_real ?? 'N/A'}
+                                                        {['ID25', 'ID26'].includes(indicador.codigo) && indicador.valor_real !== null ? ' años' : ''}
                                                     </span>
                                                 </div>
                                             </div>

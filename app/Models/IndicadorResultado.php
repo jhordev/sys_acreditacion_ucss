@@ -13,6 +13,7 @@ class IndicadorResultado extends Model
         'id_indicador',
         'id_programa_sede',
         'valor_real',
+        'finalizado',
         'id_user',
     ];
 

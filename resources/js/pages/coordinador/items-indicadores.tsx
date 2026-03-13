@@ -6,6 +6,7 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
     Dialog,
@@ -44,7 +45,7 @@ type ItemData = {
     estado: EstadoItem | null;
 };
 type Indicador = { id: number; codigo: string; nombre: string };
-type IndicadorResultado = { id: number; id_indicador: number; valor_real: number | string | null };
+type IndicadorResultado = { id: number; id_indicador: number; valor_real: number | string | null; finalizado?: boolean };
 
 type Props = {
     programaSedes: ProgramaSedeOption[];
@@ -169,6 +170,14 @@ export default function ItemsIndicadores({
         }
     }
 
+    function toggleIndicadorFinalizado(indId: number, currentVal: boolean) {
+        router.post('/items-indicadores/toggle-finalizado', {
+            id_indicador: indId,
+            id_programa_sede: selectedProgramaSede,
+            finalizado: !currentVal
+        }, { preserveScroll: true });
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Items Indicadores" />
@@ -230,16 +239,30 @@ export default function ItemsIndicadores({
                             const indItems = itemsByIndicador[ind.id] ?? [];
                             return (
                                 <Collapsible key={ind.id} defaultOpen={indItems.length > 0} className="rounded-lg border">
-                                    <CollapsibleTrigger className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50 group">
-                                        <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
-                                        <Badge variant="outline" className="text-xs font-mono shrink-0">{ind.codigo}</Badge>
-                                        <span className="text-sm flex-1 truncate">{ind.nombre}</span>
-                                        {indItems.length > 0 && (
-                                            <Badge variant="secondary" className="text-xs shrink-0">
-                                                {indItems.filter((i) => i.estado?.nombre?.toLowerCase() === 'completo').length}/{indItems.length}
-                                            </Badge>
-                                        )}
-                                    </CollapsibleTrigger>
+                                    <div className="flex w-full items-center gap-2 group pr-4">
+                                        <CollapsibleTrigger className="flex flex-1 items-center gap-2 px-4 py-3 text-left hover:bg-muted/50 overflow-hidden">
+                                            <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
+                                            <Badge variant="outline" className="text-xs font-mono shrink-0">{ind.codigo}</Badge>
+                                            <span className="text-sm flex-1 truncate">{ind.nombre}</span>
+                                            {indItems.length > 0 && (
+                                                <Badge variant="secondary" className="text-xs shrink-0">
+                                                    {indItems.filter((i) => i.estado?.nombre?.toLowerCase() === 'completo').length}/{indItems.length}
+                                                </Badge>
+                                            )}
+                                        </CollapsibleTrigger>
+
+                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Marcar hecho</span>
+                                            <Checkbox
+                                                checked={resultados.find(r => r.id_indicador === ind.id)?.finalizado ?? false}
+                                                onCheckedChange={() => toggleIndicadorFinalizado(ind.id, resultados.find(r => r.id_indicador === ind.id)?.finalizado ?? false)}
+                                                className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                                            />
+                                            {(resultados.find(r => r.id_indicador === ind.id)?.finalizado) && (
+                                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-[9px] font-black px-1.5 h-4">HECHO</Badge>
+                                            )}
+                                        </div>
+                                    </div>
                                     <CollapsibleContent>
                                         <div className="border-t px-4 py-3 space-y-4">
                                             {/* Sección de Resultado Centralizado */}
@@ -250,6 +273,7 @@ export default function ItemsIndicadores({
                                                 </h4>
                                                 <IndicadorResultForm
                                                     indicadorId={ind.id}
+                                                    indicadorCodigo={ind.codigo}
                                                     programaId={selectedProgramaSede ?? ''}
                                                     initialValue={resultados.find(r => r.id_indicador === ind.id)?.valor_real ?? ''}
                                                 />
@@ -403,10 +427,12 @@ function ItemRow({
 
 function IndicadorResultForm({
     indicadorId,
+    indicadorCodigo,
     programaId,
     initialValue
 }: {
     indicadorId: number;
+    indicadorCodigo: string;
     programaId: string;
     initialValue: string | number
 }) {
@@ -424,23 +450,29 @@ function IndicadorResultForm({
         });
     }
 
+    const isTimeBased = ['ID25', 'ID26'].includes(indicadorCodigo);
+
     return (
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-end gap-3">
             <div className="flex-1 space-y-1">
-                <Label htmlFor={`result-${indicadorId}`} className="text-[10px] text-slate-500 font-bold uppercase">Porcentaje de Cumplimiento Alcanzado (%)</Label>
+                <Label htmlFor={`result-${indicadorId}`} className="text-[10px] text-slate-500 font-bold uppercase">
+                    {isTimeBased ? 'Tiempo Promedio Alcanzado (Años)' : 'Porcentaje de Cumplimiento Alcanzado (%)'}
+                </Label>
                 <div className="relative">
                     <Input
                         id={`result-${indicadorId}`}
                         type="number"
                         step="0.01"
                         min="0"
-                        max="100"
-                        placeholder="Ej: 95.00"
+                        max={isTimeBased ? undefined : "100"}
+                        placeholder={isTimeBased ? "Ej: 1.5" : "Ej: 95.00"}
                         className="h-9 bg-white pr-8"
                         value={data.valor_real}
                         onChange={(e) => setData('valor_real', e.target.value)}
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">%</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
+                        {isTimeBased ? 'Años' : '%'}
+                    </div>
                 </div>
             </div>
             <Button
